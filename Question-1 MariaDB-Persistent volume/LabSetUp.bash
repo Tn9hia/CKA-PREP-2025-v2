@@ -80,6 +80,12 @@ echo "🔹 Simulating accidental deletion of Deployment and PVC..."
 kubectl delete deployment mariadb -n mariadb --ignore-not-found
 kubectl delete pvc mariadb -n mariadb --ignore-not-found
 
+echo "🔹 Resetting PV for reuse (clearing any stale claimRef)..."
+claim_ref=$(kubectl get pv mariadb-pv -o jsonpath='{.spec.claimRef.name}' 2>/dev/null || true)
+if [ -n "$claim_ref" ]; then
+  kubectl patch pv mariadb-pv --type=json -p '[{"op":"remove","path":"/spec/claimRef"}]'
+fi
+
 echo "✅ Lab setup complete!"
 echo "   - PV retained and ready for reuse"
 echo "   - Namespace: mariadb"
